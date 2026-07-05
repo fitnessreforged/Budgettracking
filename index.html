@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Dash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="dash">
+
+  <header class="dash-header">
+    <div class="header-left">
+      <span class="eyebrow">MONTHLY TELEMETRY</span>
+      <h1>Budget Dash</h1>
+    </div>
+    <div class="header-right">
+      <button id="resetBtn" class="ghost-btn">Reset to defaults</button>
+    </div>
+  </header>
+
+  <!-- SIGNATURE GAUGE -->
+  <section class="gauge-panel">
+    <div class="gauge-wrap">
+      <svg viewBox="0 0 240 140" class="gauge-svg">
+        <path d="M 20 120 A 100 100 0 0 1 220 120" class="gauge-track"/>
+        <path id="gaugeRedzone" d="" class="gauge-redzone"/>
+        <path id="gaugeArc" d="" class="gauge-fill"/>
+        <line id="gaugeNeedle" x1="120" y1="120" x2="120" y2="30" class="gauge-needle"/>
+        <circle cx="120" cy="120" r="7" class="gauge-hub"/>
+      </svg>
+      <div class="gauge-labels">
+        <span>TIGHT</span>
+        <span>MARGIN</span>
+      </div>
+    </div>
+    <div class="gauge-readout">
+      <span class="readout-label" id="scenarioLabel">LEAN MONTH SURPLUS</span>
+      <span class="readout-value" id="surplusValue">$0</span>
+      <span class="readout-sub" id="surplusSub">of income after fixed + variable spend</span>
+    </div>
+    <div class="scenario-toggle">
+      <button class="toggle-btn active" data-scenario="lean">Lean Month</button>
+      <button class="toggle-btn" data-scenario="full">Commission Month</button>
+    </div>
+  </section>
+
+  <div class="grid">
+
+    <!-- INCOME -->
+    <section class="panel">
+      <div class="panel-head"><span class="panel-num">01</span><h2>Income</h2></div>
+      <div class="field">
+        <label>Biweekly paycheck (net)</label>
+        <div class="input-row"><span>$</span><input type="number" id="hourly" value="1100"></div>
+      </div>
+      <div class="field">
+        <label>Paychecks per month</label>
+        <div class="input-row"><input type="number" id="checks" value="2"></div>
+      </div>
+      <div class="field">
+        <label>Commission check (gross, if target hit)</label>
+        <div class="input-row"><span>$</span><input type="number" id="commGross" value="1500"></div>
+      </div>
+      <div class="field">
+        <label>Commission tax rate</label>
+        <div class="input-row"><input type="number" id="taxRate" value="38"><span>%</span></div>
+      </div>
+      <div class="readout-line">
+        <span>Base income</span><span id="baseIncomeOut" class="mono">$0</span>
+      </div>
+      <div class="readout-line">
+        <span>Full income (w/ commission)</span><span id="fullIncomeOut" class="mono">$0</span>
+      </div>
+    </section>
+
+    <!-- FIXED COSTS -->
+    <section class="panel">
+      <div class="panel-head"><span class="panel-num">02</span><h2>Fixed Costs</h2></div>
+      <div id="fixedList" class="dynamic-list"></div>
+      <button id="addFixed" class="add-btn">+ Add fixed cost</button>
+      <div class="readout-line total-line">
+        <span>Total fixed</span><span id="fixedTotalOut" class="mono">$0</span>
+      </div>
+    </section>
+
+    <!-- VARIABLE -->
+    <section class="panel">
+      <div class="panel-head"><span class="panel-num">03</span><h2>Variable Spend</h2></div>
+      <div class="field">
+        <label>Food, gas, everyday spending</label>
+        <div class="input-row"><span>$</span><input type="number" id="variable" value="750"></div>
+      </div>
+      <p class="hint">Groceries, gas, eating out — anything that isn't a fixed bill.</p>
+    </section>
+
+    <!-- ALLOCATION -->
+    <section class="panel span-2">
+      <div class="panel-head"><span class="panel-num">04</span><h2>Surplus Allocation</h2></div>
+      <div class="slider-group">
+        <div class="slider-row">
+          <label>Emergency savings</label>
+          <input type="range" id="pctSave" min="0" max="100" value="55">
+          <span class="pct-out" id="pctSaveOut">55%</span>
+        </div>
+        <div class="slider-row">
+          <label>Track / car fund</label>
+          <input type="range" id="pctTrack" min="0" max="100" value="30">
+          <span class="pct-out" id="pctTrackOut">30%</span>
+        </div>
+        <div class="slider-row">
+          <label>Discretionary / fun</label>
+          <input type="range" id="pctFun" min="0" max="100" value="15">
+          <span class="pct-out" id="pctFunOut">15%</span>
+        </div>
+      </div>
+      <div class="pct-warning" id="pctWarning"></div>
+
+      <div class="allocation-cards">
+        <div class="alloc-card">
+          <span class="alloc-eyebrow">LEAN MONTH</span>
+          <div class="alloc-row"><span>Savings</span><span id="leanSave" class="mono">$0</span></div>
+          <div class="alloc-row"><span>Track fund</span><span id="leanTrack" class="mono">$0</span></div>
+          <div class="alloc-row"><span>Fun</span><span id="leanFun" class="mono">$0</span></div>
+        </div>
+        <div class="alloc-card">
+          <span class="alloc-eyebrow">COMMISSION MONTH</span>
+          <div class="alloc-row"><span>Savings</span><span id="fullSave" class="mono">$0</span></div>
+          <div class="alloc-row"><span>Track fund</span><span id="fullTrack" class="mono">$0</span></div>
+          <div class="alloc-row"><span>Fun</span><span id="fullFun" class="mono">$0</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LONG-TERM TRACKING -->
+    <section class="panel span-2">
+      <div class="panel-head"><span class="panel-num">05</span><h2>Long-Term Tracking</h2></div>
+      <p class="hint">Log what actually happened each week. Weeks roll up into a month; months build your history below.</p>
+
+      <div class="month-nav">
+        <button id="prevMonth" class="nav-btn" aria-label="Previous month">‹</button>
+        <span id="monthLabel" class="month-label">Month</span>
+        <button id="nextMonth" class="nav-btn" aria-label="Next month">›</button>
+      </div>
+
+      <div class="week-table">
+        <div class="week-row week-header">
+          <span>Week</span><span>Actual income</span><span>Actual spend</span><span>Surplus</span>
+        </div>
+        <div id="weekRows"></div>
+      </div>
+
+      <div class="readout-line total-line">
+        <span>Month total surplus</span><span id="monthTotalOut" class="mono">$0</span>
+      </div>
+
+      <div class="history-block">
+        <span class="alloc-eyebrow">MONTH-OVER-MONTH HISTORY</span>
+        <div id="historyList" class="history-list"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="dash-footer">
+    <span>Data saves locally in your browser. Nothing leaves your device.</span>
+  </footer>
+
+</div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
