@@ -6,7 +6,568 @@
 <title>Budget Dash</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css">
+<style>
+:root {
+  --bg: #E7DEC7;
+  --surface: #2C2924;
+  --surface-raised: #38342D;
+  --inset: #1F1C18;
+  --line: #4A4437;
+  --line-light: #C9BC9C;
+  --text: #ECE1C4;
+  --text-dim: #B7AB8C;
+  --text-onlight: #33291C;
+  --text-onlight-dim: #6E624C;
+  --accent: #D9A94A;
+  --accent-onlight: #8A6620;
+  --accent-dim: #4A3B1C;
+  --warn: #E0803A;
+  --danger: #C0453B;
+  --font-display: 'Rajdhani', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image:
+    radial-gradient(circle at 15% 0%, #DCCFA9 0%, transparent 45%),
+    radial-gradient(circle at 100% 100%, #DED2AE 0%, transparent 40%);
+  color: var(--text-onlight);
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+.dash {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--line-light);
+  padding-bottom: 18px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--accent-onlight);
+  display: block;
+  margin-bottom: 4px;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 34px;
+  letter-spacing: 0.01em;
+  margin: 0;
+  color: var(--text-onlight);
+}
+
+.ghost-btn {
+  background: transparent;
+  border: 1px solid var(--line-light);
+  color: var(--text-onlight-dim);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.ghost-btn:hover { border-color: var(--accent-onlight); color: var(--accent-onlight); }
+.ghost-btn:focus-visible { outline: 2px solid var(--accent-onlight); outline-offset: 2px; }
+
+/* GAUGE PANEL */
+.gauge-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 28px 24px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.gauge-wrap {
+  width: 100%;
+  max-width: 320px;
+  position: relative;
+}
+
+.gauge-svg { width: 100%; overflow: visible; }
+
+.gauge-track {
+  fill: none;
+  stroke: #423D34;
+  stroke-width: 14;
+  stroke-linecap: round;
+}
+
+.gauge-redzone {
+  fill: none;
+  stroke: var(--danger);
+  stroke-width: 14;
+  stroke-linecap: round;
+  opacity: 0.35;
+}
+
+.gauge-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 14;
+  stroke-linecap: round;
+  transition: d 0.4s ease;
+  filter: drop-shadow(0 0 6px rgba(217, 169, 74, 0.5));
+}
+
+.gauge-needle {
+  stroke: var(--text);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform-origin: 120px 120px;
+  transition: transform 0.5s cubic-bezier(.4,1.4,.6,1);
+}
+
+.gauge-hub { fill: var(--text); }
+
+.gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  margin-top: -8px;
+  padding: 0 8px;
+}
+
+.gauge-readout {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.readout-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+}
+
+.readout-value {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--accent);
+  margin: 2px 0;
+}
+
+.readout-value.danger { color: var(--danger); }
+.readout-value.warn { color: var(--warn); }
+
+.readout-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.scenario-toggle {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.toggle-btn.active { background: var(--accent-dim); color: var(--accent); }
+.toggle-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.panel.span-2 { grid-column: 1 / -1; }
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.panel-head h2 {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+.field { margin-bottom: 14px; }
+
+.field label {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+
+.input-row span {
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.input-row input {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  padding: 9px 6px;
+  width: 100%;
+  outline: none;
+}
+
+.input-row input:focus { color: var(--accent); }
+
+.readout-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-dim);
+  padding: 8px 0;
+  border-top: 1px dashed var(--line);
+}
+
+.readout-line.total-line {
+  color: var(--text);
+  font-weight: 600;
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+}
+
+.mono { font-family: var(--font-mono); color: var(--text); }
+
+.dynamic-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+
+.fixed-item {
+  display: grid;
+  grid-template-columns: 1fr 110px 28px;
+  gap: 8px;
+  align-items: center;
+}
+
+.fixed-item input[type="text"] {
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.fixed-item .input-row { padding: 0 8px; }
+.fixed-item .input-row input { font-size: 14px; padding: 7px 4px; }
+
+.remove-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  height: 32px;
+}
+.remove-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+.add-btn {
+  background: transparent;
+  border: 1px dashed var(--line);
+  color: var(--accent);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+}
+.add-btn:hover { border-color: var(--accent); }
+
+.hint { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+
+.slider-group { display: flex; flex-direction: column; gap: 16px; margin-bottom: 10px; }
+
+.slider-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 50px;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider-row label { font-size: 13px; color: var(--text-dim); }
+
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 4px;
+  background: var(--line);
+  border-radius: 2px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(217, 169, 74, 0.6);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+}
+input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--text); }
+
+.pct-out { font-family: var(--font-mono); font-size: 13px; text-align: right; color: var(--text); }
+
+.pct-warning {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--warn);
+  min-height: 16px;
+  margin-bottom: 10px;
+}
+
+.allocation-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.alloc-card {
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.alloc-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.alloc-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  color: var(--text);
+  padding: 4px 0;
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 14px 0 18px;
+}
+
+.nav-btn {
+  background: var(--inset);
+  border: 1px solid var(--line);
+  color: var(--text);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nav-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.month-label {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 160px;
+  text-align: center;
+}
+
+.week-table { margin-bottom: 4px; }
+
+.week-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.week-header {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+
+.week-row .week-label {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.week-row .input-row { padding: 0 8px; }
+.week-row .input-row input { font-size: 13px; padding: 6px 4px; }
+
+.week-surplus {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text);
+  text-align: right;
+  padding-right: 4px;
+}
+.week-surplus.danger { color: var(--danger); }
+
+.history-block { margin-top: 20px; }
+
+.history-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+
+.history-item {
+  display: grid;
+  grid-template-columns: 100px 1fr 90px;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.history-month {
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+}
+
+.history-bar-track {
+  background: var(--inset);
+  border-radius: 6px;
+  height: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.history-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 6px;
+}
+.history-bar-fill.danger { background: var(--danger); }
+
+.history-value {
+  font-family: var(--font-mono);
+  color: var(--text);
+  text-align: right;
+}
+
+.history-empty {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.dash-footer {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--text-onlight-dim);
+  margin-top: 28px;
+}
+
+@media (max-width: 720px) {
+  .grid { grid-template-columns: 1fr; }
+  .panel.span-2 { grid-column: 1; }
+  .allocation-cards { grid-template-columns: 1fr; }
+  .readout-value { font-size: 42px; }
+  .slider-row { grid-template-columns: 110px 1fr 42px; }
+  h1 { font-size: 26px; }
+  .week-row { grid-template-columns: 1fr; gap: 4px; }
+  .week-header { display: none; }
+  .week-row .week-label { font-size: 12px; }
+  .week-surplus { text-align: left; padding-right: 0; }
+  .history-item { grid-template-columns: 80px 1fr 70px; font-size: 11.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gauge-needle, .gauge-fill { transition: none; }
+}
+
+</style>
 </head>
 <body>
 
@@ -171,6 +732,380 @@
 
 </div>
 
-<script src="assets/app.js"></script>
+<script>
+const STORAGE_KEY = 'budget-dash-state-v1';
+
+const DEFAULT_STATE = {
+  hourly: 1100,
+  checks: 2,
+  commGross: 1500,
+  taxRate: 38,
+  variable: 750,
+  pctSave: 55,
+  pctTrack: 30,
+  pctFun: 15,
+  scenario: 'lean',
+  fixedCosts: [
+    { name: 'Car payment', amount: 411 },
+    { name: 'Motorcycle payment', amount: 271 },
+    { name: 'Insurance', amount: 150 },
+    { name: 'Gym membership', amount: 42 },
+    { name: 'Game Pass', amount: 23 },
+    { name: 'Spotify', amount: 14 },
+  ],
+};
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return structuredClone(DEFAULT_STATE);
+    const parsed = JSON.parse(raw);
+    return { ...structuredClone(DEFAULT_STATE), ...parsed };
+  } catch (e) {
+    return structuredClone(DEFAULT_STATE);
+  }
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function fmt(n) {
+  const rounded = Math.round(n);
+  const neg = rounded < 0;
+  const abs = Math.abs(rounded).toLocaleString('en-US');
+  return neg ? `($${abs})` : `$${abs}`;
+}
+
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function describeArc(cx, cy, r, startAngle, endAngle) {
+  const start = polarToCartesian(cx, cy, r, startAngle);
+  const end = polarToCartesian(cx, cy, r, endAngle);
+  const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
+  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`;
+}
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+function renderFixedList() {
+  const list = document.getElementById('fixedList');
+  list.innerHTML = '';
+  state.fixedCosts.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'fixed-item';
+    row.innerHTML = `
+      <input type="text" value="${item.name}" data-idx="${i}" data-field="name">
+      <div class="input-row"><span>$</span><input type="number" value="${item.amount}" data-idx="${i}" data-field="amount"></div>
+      <button class="remove-btn" data-idx="${i}" title="Remove">✕</button>
+    `;
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const idx = +e.target.dataset.idx;
+      const field = e.target.dataset.field;
+      state.fixedCosts[idx][field] = field === 'amount' ? (+e.target.value || 0) : e.target.value;
+      compute();
+    });
+  });
+  list.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = +e.target.dataset.idx;
+      state.fixedCosts.splice(idx, 1);
+      renderFixedList();
+      compute();
+    });
+  });
+}
+
+function compute() {
+  const hourly = +document.getElementById('hourly').value || 0;
+  const checks = +document.getElementById('checks').value || 0;
+  const commGross = +document.getElementById('commGross').value || 0;
+  const taxRate = +document.getElementById('taxRate').value || 0;
+  const variable = +document.getElementById('variable').value || 0;
+
+  state.hourly = hourly;
+  state.checks = checks;
+  state.commGross = commGross;
+  state.taxRate = taxRate;
+  state.variable = variable;
+
+  const commNet = commGross * (1 - taxRate / 100);
+  const baseIncome = hourly * checks;
+  const fullIncome = baseIncome + commNet;
+  const fixedTotal = state.fixedCosts.reduce((sum, c) => sum + (+c.amount || 0), 0);
+
+  const surplusLean = baseIncome - fixedTotal - variable;
+  const surplusFull = fullIncome - fixedTotal - variable;
+
+  document.getElementById('baseIncomeOut').textContent = fmt(baseIncome);
+  document.getElementById('fullIncomeOut').textContent = fmt(fullIncome);
+  document.getElementById('fixedTotalOut').textContent = fmt(fixedTotal);
+
+  // Allocation percentages
+  let pctSave = +document.getElementById('pctSave').value;
+  let pctTrack = +document.getElementById('pctTrack').value;
+  let pctFun = +document.getElementById('pctFun').value;
+  document.getElementById('pctSaveOut').textContent = pctSave + '%';
+  document.getElementById('pctTrackOut').textContent = pctTrack + '%';
+  document.getElementById('pctFunOut').textContent = pctFun + '%';
+
+  state.pctSave = pctSave;
+  state.pctTrack = pctTrack;
+  state.pctFun = pctFun;
+
+  const total = pctSave + pctTrack + pctFun;
+  const warningEl = document.getElementById('pctWarning');
+  warningEl.textContent = total === 100 ? '' : `Splits total ${total}% — adjust so they add to 100%.`;
+
+  const leanBase = Math.max(surplusLean, 0);
+  const fullBase = Math.max(surplusFull, 0);
+
+  document.getElementById('leanSave').textContent = fmt(leanBase * pctSave / 100);
+  document.getElementById('leanTrack').textContent = fmt(leanBase * pctTrack / 100);
+  document.getElementById('leanFun').textContent = fmt(leanBase * pctFun / 100);
+  document.getElementById('fullSave').textContent = fmt(fullBase * pctSave / 100);
+  document.getElementById('fullTrack').textContent = fmt(fullBase * pctTrack / 100);
+  document.getElementById('fullFun').textContent = fmt(fullBase * pctFun / 100);
+
+  // Gauge + headline readout depends on scenario
+  const scenario = state.scenario;
+  const income = scenario === 'lean' ? baseIncome : fullIncome;
+  const surplus = scenario === 'lean' ? surplusLean : surplusFull;
+
+  document.getElementById('scenarioLabel').textContent =
+    scenario === 'lean' ? 'LEAN MONTH SURPLUS' : 'COMMISSION MONTH SURPLUS';
+
+  const valueEl = document.getElementById('surplusValue');
+  valueEl.textContent = fmt(surplus);
+  valueEl.classList.remove('danger', 'warn');
+  const ratio = income > 0 ? surplus / income : 0;
+  if (surplus < 0) valueEl.classList.add('danger');
+  else if (ratio < 0.1) valueEl.classList.add('warn');
+
+  renderGauge(ratio);
+
+  saveState();
+}
+
+function renderGauge(ratio) {
+  const minRatio = -0.3, maxRatio = 0.6;
+  const clamped = clamp(ratio, minRatio, maxRatio);
+  const angle = -90 + ((clamped - minRatio) / (maxRatio - minRatio)) * 180;
+  const breakevenAngle = -90 + ((0 - minRatio) / (maxRatio - minRatio)) * 180;
+
+  document.getElementById('gaugeRedzone').setAttribute('d', describeArc(120, 120, 100, -90, breakevenAngle));
+  document.getElementById('gaugeArc').setAttribute('d', describeArc(120, 120, 100, -90, angle));
+  document.getElementById('gaugeNeedle').style.transform = `rotate(${angle}deg)`;
+}
+
+function bindScenarioToggle() {
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.scenario = btn.dataset.scenario;
+      compute();
+    });
+  });
+}
+
+function bindInputs() {
+  ['hourly', 'checks', 'commGross', 'taxRate', 'variable', 'pctSave', 'pctTrack', 'pctFun']
+    .forEach(id => document.getElementById(id).addEventListener('input', compute));
+}
+
+const TRACKING_KEY = 'budget-dash-tracking-v1';
+let tracking = loadTracking();
+let currentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+function loadTracking() {
+  try {
+    const raw = localStorage.getItem(TRACKING_KEY);
+    return raw ? JSON.parse(raw) : { months: {} };
+  } catch (e) {
+    return { months: {} };
+  }
+}
+
+function saveTracking() {
+  localStorage.setItem(TRACKING_KEY, JSON.stringify(tracking));
+}
+
+function monthKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function shortDate(d) {
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getMonthWeeks(date) {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  const start = new Date(firstDay);
+  start.setDate(start.getDate() - start.getDay());
+
+  const weeks = [];
+  let cursor = new Date(start);
+  while (cursor <= lastDay) {
+    const weekStart = new Date(cursor);
+    const weekEnd = new Date(cursor);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    weeks.push({ start: weekStart, end: weekEnd });
+    cursor.setDate(cursor.getDate() + 7);
+  }
+  return weeks;
+}
+
+function getMonthData(key) {
+  if (!tracking.months[key]) tracking.months[key] = { weeks: [] };
+  return tracking.months[key];
+}
+
+function renderTracking() {
+  const key = monthKey(currentMonth);
+  document.getElementById('monthLabel').textContent =
+    currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const weekDefs = getMonthWeeks(currentMonth);
+  const monthData = getMonthData(key);
+
+  while (monthData.weeks.length < weekDefs.length) monthData.weeks.push({ income: 0, spend: 0 });
+  monthData.weeks = monthData.weeks.slice(0, weekDefs.length);
+
+  const rowsEl = document.getElementById('weekRows');
+  rowsEl.innerHTML = '';
+  let monthSurplus = 0;
+
+  weekDefs.forEach((w, i) => {
+    const wd = monthData.weeks[i];
+    const surplus = (wd.income || 0) - (wd.spend || 0);
+    monthSurplus += surplus;
+
+    const row = document.createElement('div');
+    row.className = 'week-row';
+    row.innerHTML = `
+      <span class="week-label">${shortDate(w.start)} – ${shortDate(w.end)}</span>
+      <div class="input-row"><span>$</span><input type="number" value="${wd.income || 0}" data-week="${i}" data-field="income"></div>
+      <div class="input-row"><span>$</span><input type="number" value="${wd.spend || 0}" data-week="${i}" data-field="spend"></div>
+      <span class="week-surplus ${surplus < 0 ? 'danger' : ''}">${fmt(surplus)}</span>
+    `;
+    rowsEl.appendChild(row);
+  });
+
+  document.getElementById('monthTotalOut').textContent = fmt(monthSurplus);
+
+  rowsEl.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const idx = +e.target.dataset.week;
+      const field = e.target.dataset.field;
+      monthData.weeks[idx][field] = +e.target.value || 0;
+      saveTracking();
+      renderTracking();
+      renderHistory();
+    });
+  });
+
+  saveTracking();
+}
+
+function renderHistory() {
+  const listEl = document.getElementById('historyList');
+  const keys = Object.keys(tracking.months).sort();
+  if (keys.length === 0) {
+    listEl.innerHTML = '<div class="history-empty">No months logged yet — fill in a week above to start your history.</div>';
+    return;
+  }
+
+  const totals = keys.map(k => {
+    const weeks = tracking.months[k].weeks || [];
+    const surplus = weeks.reduce((s, w) => s + ((w.income || 0) - (w.spend || 0)), 0);
+    return { key: k, surplus };
+  });
+
+  const maxAbs = Math.max(...totals.map(t => Math.abs(t.surplus)), 1);
+
+  listEl.innerHTML = totals.map(t => {
+    const [y, m] = t.key.split('-');
+    const label = new Date(+y, +m - 1, 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    const widthPct = Math.max((Math.abs(t.surplus) / maxAbs) * 100, 2);
+    const isDanger = t.surplus < 0;
+    return `
+      <div class="history-item">
+        <span class="history-month">${label}</span>
+        <div class="history-bar-track"><div class="history-bar-fill ${isDanger ? 'danger' : ''}" style="width:${widthPct}%"></div></div>
+        <span class="history-value">${fmt(t.surplus)}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function bindMonthNav() {
+  document.getElementById('prevMonth').addEventListener('click', () => {
+    currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+    renderTracking();
+    renderHistory();
+  });
+  document.getElementById('nextMonth').addEventListener('click', () => {
+    currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+    renderTracking();
+    renderHistory();
+  });
+}
+
+function init() {
+  document.getElementById('hourly').value = state.hourly;
+  document.getElementById('checks').value = state.checks;
+  document.getElementById('commGross').value = state.commGross;
+  document.getElementById('taxRate').value = state.taxRate;
+  document.getElementById('variable').value = state.variable;
+  document.getElementById('pctSave').value = state.pctSave;
+  document.getElementById('pctTrack').value = state.pctTrack;
+  document.getElementById('pctFun').value = state.pctFun;
+
+  document.querySelectorAll('.toggle-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.scenario === state.scenario);
+  });
+
+  renderFixedList();
+  bindInputs();
+  bindScenarioToggle();
+
+  document.getElementById('addFixed').addEventListener('click', () => {
+    state.fixedCosts.push({ name: 'New item', amount: 0 });
+    renderFixedList();
+    compute();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (confirm('Reset all values to defaults? This clears your saved changes.')) {
+      state = structuredClone(DEFAULT_STATE);
+      localStorage.removeItem(STORAGE_KEY);
+      init();
+    }
+  });
+
+  bindMonthNav();
+  renderTracking();
+  renderHistory();
+
+  compute();
+}
+
+init();
+
+</script>
 </body>
 </html>
